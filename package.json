@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -20,13 +21,18 @@
   },
   "homepage": "https://github.com/Ntakuya/react-sample#readme",
   "dependencies": {
+    "@types/react-test-renderer": "^16.9.2",
     "next": "^9.2.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0"
   },
   "devDependencies": {
+    "@types/jest": "^25.1.1",
     "@types/node": "^13.5.3",
     "@types/react": "^16.9.19",
+    "jest": "^25.1.0",
+    "react-test-renderer": "^16.12.0",
+    "ts-jest": "^25.1.0",
     "typescript": "^3.7.5"
   }
 }
