@@ -2,17 +2,18 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:10-browser
+      - image: circleci/node:10.13-browsers
     working_directory: ~/project
     steps:
       - checkout
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-{{ checksum "package-lock.json" }}
             - v1-dependencies-
-      - run: npm install
+      - run: npm ci
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - run: npm run tslint
       - run: npm run test
