@@ -9,11 +9,10 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package-lock.json" }}
-            - v1-dependencies-
-      - run: npm ci
+      - run: npm install
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
       - run: npm run tslint
-      - run: npm run test
+      - run: npm run test -- --ci --runInBand

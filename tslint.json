@@ -2,6 +2,9 @@
   "defaultSeverity": "warning",
   "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier"],
   "jsRules": {},
+  "linterOptions": {
+    "exclude": ["node_modules", "*.d.ts", "__test__"]
+  },
   "rules": {
     "no-implicit-dependencies": false,
     "jsx-boolean-value": ["always", { "never": ["exact"] }],
