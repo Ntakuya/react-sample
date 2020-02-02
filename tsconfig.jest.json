@@ -3,5 +3,6 @@
   "compilerOptions": {
     "jsx": "react"
   },
-  "include": ["setUpTests.js"]
+  "include": ["setUpTests.js"],
+  "exclude": ["node_modules", "cypress"]
 }

@@ -1,9 +1,15 @@
 version: 2.1
-jobs:
-  build:
+executors:
+  node:
     docker:
       - image: circleci/node:10.13-browsers
     working_directory: ~/project
+orbs:
+  cypress: cypress-io/cypress@1.13.0
+jobs:
+  build:
+    executor:
+      name: node
     steps:
       - checkout
       - restore_cache:
@@ -12,7 +18,41 @@ jobs:
       - run: npm install
       - save_cache:
           paths:
-            - node_modules
+            - ~/node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
+  test-lint:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+      - run: npm install
       - run: npm run tslint
+  test-integration:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+      - run: npm install
       - run: npm run test -- --ci --runInBand
+workflows:
+  version: 2
+  test-all:
+    jobs:
+      - build
+      - test-lint:
+          requires:
+            - build
+      - test-integration:
+          requires:
+            - build
+      - cypress/run:
+          start: npm run dev
+          wait-on: "http://localhost:3000"
+          requires:
+            - build

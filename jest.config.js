@@ -10,5 +10,6 @@ module.exports = {
   transform: {
     "^.+\\.tsx?$": "ts-jest"
   },
-  verbose: true
+  verbose: true,
+  testPathIgnorePatterns: ["node_modules/", "cypress/"]
 };
