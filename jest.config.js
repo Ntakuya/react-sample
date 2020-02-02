@@ -3,6 +3,12 @@ module.exports = {
   globals: {
     "ts-jest": {
       tsConfig: "tsconfig.jest.json"
-    }
-  }
+    },
+    NODE_ENV: "test"
+  },
+  setupFilesAfterEnv: ["./setuptest.js"],
+  transform: {
+    "^.+\\.tsx?$": "ts-jest"
+  },
+  verbose: true
 };
