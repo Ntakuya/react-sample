@@ -18,9 +18,9 @@ jobs:
       - run: npm install
       - save_cache:
           paths:
-            - node_modules
+            - ~/node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
-  test:
+  test-lint:
     executor:
       name: node
     steps:
@@ -30,12 +30,29 @@ jobs:
             - v1-dependencies-{{ checksum "package-lock.json" }}
       - run: npm install
       - run: npm run tslint
+  test-integration:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+      - run: npm install
       - run: npm run test -- --ci --runInBand
 workflows:
   version: 2
   test-all:
     jobs:
       - build
-      - test:
+      - test-lint:
+          requires:
+            - build
+      - test-integration:
+          requires:
+            - build
+      - cypress/run:
+          start: npm run dev
+          wait-on: "http://localhost:3000"
           requires:
             - build
