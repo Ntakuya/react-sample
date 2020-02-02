@@ -12,6 +12,8 @@ jobs:
       name: node
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "package-lock.json" }}
@@ -20,25 +22,24 @@ jobs:
           paths:
             - ~/node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - persist_to_workspace:
+          root: .
+          paths: .
   test-lint:
     executor:
       name: node
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
-      - run: npm install
+      - attach_workspace:
+          at: .
       - run: npm run tslint
   test-integration:
     executor:
       name: node
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
-      - run: npm install
+      - attach_workspace:
+          at: .
       - run: npm run test -- --ci --runInBand
 workflows:
   version: 2
