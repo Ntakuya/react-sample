@@ -12,6 +12,7 @@
     "tslint:fix": "npm run tslint -- --fix",
     "tslint:check": "tslint-config-prettier-check ./tslint.json",
     "prettier": "prettier --write --config ./.prettierrc './src/**/*.{ts,tsx}'",
+    "cypress:run": "cypress run",
     "cypress:open": "cypress open"
   },
   "repository": {
