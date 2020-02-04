@@ -12,7 +12,7 @@ jobs:
       - checkout
       - run:
           name: update-npm
-          command: "sudo npm install -g npm@latest"
+          command: 'sudo npm install -g npm@latest'
       - restore_cache:
           key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - run:
@@ -36,20 +36,33 @@ jobs:
       - checkout
       - run:
           name: update-npm
-          command: "sudo npm install -g npm@latest"
+          command: 'sudo npm install -g npm@latest'
       - run:
           name: install now on global
-          command: "sudo npm install -g now"
+          command: 'sudo npm install -g now'
       - attach_workspace:
           at: .
       - run:
           name: deploy to now
           command: now deploy --token $NOW_TOKEN
+  test-lint:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: linting code
+          command: npm run lint
 workflows:
   version: 2
   build-and-cache:
     jobs:
       - build
-      - deploy-now:
+      - test-lint:
           requires:
             - build
+      - deploy-now:
+          requires:
+            - test-lint

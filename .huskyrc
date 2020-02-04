@@ -1,4 +1,0 @@
-{
-  "pre-commit": "pretty-quick --staged",
-  "pre-push": "npm run lint"
-}

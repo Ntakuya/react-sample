@@ -227,3 +227,5 @@ $ touch .huskyrc
   }
 }
 ```
+
+## 3. CircleCI の build をする前に lint test を走らす
