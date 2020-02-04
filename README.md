@@ -1,209 +1,229 @@
-# NextJS(Typescript)を now にデプロイする
+# NextJS(Typescript)の環境に ESLINT/Prettier をツッコミ CircleCI の設定に追加する
 
-#### Table of Contents
+tslint を利用しようと思いましたが、2019 年に ESLINT に統一するようになるよって話があるので[https://github.com/palantir/tslint/issues/4534](https://github.com/palantir/tslint/issues/4534)ESLINT に変更して作成します。
 
-0. now、Nextjs とは
-1. now の初期設定をする
-1. nextjs を now に手動デプロイする
-1. nextjs を CircleCI を使って Auto Deploy する
+## Table of Contents
 
-## 0. now、Nextjs とは
+1. Prettier と es-lint を追加する
+2. husky を追加して precommit/prepush の前に lint と formatter を走らす
+3. CircleCI の build をする前に lint test を走らす
 
-[next.js](https://nextjs.org/)とは、
+## 1. Prettier と ts-lint を追加する
 
-[now](https://zeit.co/dashboard)とは、
+[Prettier](https://prettier.io/)の有効かをしていきます。
 
-## 1. now の初期設定をする
+### 1-1, Prettier を install する
 
-[now](https://zeit.co/dashboard)にアクセスをし、ユーザー登録をおこなっていきます。
-下の画面の Deploy Free ボタンをクリックしてアカウント作成に移動します。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-top.png?raw=true">
-
-今回は Contenue With GitHub を使って GitHub でアカウントを作成していきます。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-signup.png?raw=true">
-
-アカウントの作成が完了するとダッシュボードに行くことができます。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-dashboard.png?raw=true">
-
-これで web 上の設定は完了です。
-次に、now コマンドを install していきます。
+install するのは 2 種類。perttier と pretty-quick を install します。
 
 ```terminal
-$ npm install -g now
-
-# インストールが完了したら一応バージョンを確認いたします。
-
-$ now --version
-16.7.3
+$ npm install -D prettier pretty-quick
 ```
 
-コマンドが完了したら、*now*コマンドを利用してログインしていきます。
-メールアドレスを求められるので、ログインしたアカウントの Email アドレスを利用してログインをしていきます。
+### 1-2. Prettier の設定ファイルを作成する
 
 ```terminal
-$ now login
-We sent an email to YOUR_EMAIL_ADDRESS Please follow the steps provided
-  inside it and make sure the security code matches Happy Magellanic Penguin.
-✔ Email confirmed
-> Congratulations! You are now logged in. In order to deploy something, run `now`.
+$ touch .prettierrc
 ```
 
-## 2. nextjs を now に手動デプロイする
+中身は個人的に基本的な設定のみ対応します。
 
-```terminal
-$ pwd
-/your/project/directory
-```
-
-現状のディレクトリにいることを確認します。
-nowでconfigで扱う、now.jsonファイルを作成していきます。
-
-```now.json
+```.prettierrc
 {
-  "name": "next-sample"
+  "semi": true,
+  "trailingComma": "all",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2
 }
 ```
 
-これで、プロジェクト名を固定してdeployすることができます。
+install した pretty-quick が利用できるように、package.json に追加します。
+
+```package.json
+...
+"scripts": {
+  "dev": "next",
+  "build": "next build",
+  "start": "next start",
+  "prettier:quick": "pretty-quick --staged"
+},
+...
+```
+
+試しに実行すると、github 場で変更したファイルを確認して prettier を実行してくれます。
 
 ```
-ちなみにプロジェクト名を指定しない場合は、root directoryの名前が優先されるっぽいです。
+$ npm run prettier:quick
+🔍  Finding changed files since git revision 43aa1b4.
+🎯  Found 0 changed files.
+✅  Everything is awesome!
 ```
+
+### 1-3. lint を install する
+
+lint の設定は、lint をインストールして設定ファイルを作成します。
+
+```
+$ npm install -D eslint
+```
+
+### 1-4. lint の設定をする
+
+es-lint の設定ファイル eslint.json を作成していきます。
+--init を利用しファイルを作成していきます。
 
 ```terminal
-$ now --prod
+$ npx eslint --init
+? How would you like to use ESLint? To check syntax, find problems, and enforce code
+style
+? What type of modules does your project use? JavaScript modules (import/export)
+? Which framework does your project use? React
+? Does your project use TypeScript? Yes
+? Where does your code run? Browser
+? How would you like to define a style for your project? Use a popular style guide
+? Which style guide do you want to follow? Standard: https://github.com/standard/stan
+dard
+? What format do you want your config file to be in? JSON
+```
 
-Deploying ~/your/project/directory under YOUR_PC
-> Using project PROJECT_NAME
-> NOTE: To deploy to production (YOUR_PRJECT_NAME.now.sh), run `now --prod`
-> Synced 1 file [4s]
-> https://XXX.now.sh [4s]
-> Ready! Deployed to https:/XXX.now.sh [in clipboard] [24s]
+作成させた eslintrc は以下になります。
+
+```.eslintrc
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": ["plugin:react/recommended", "standard"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "@typescript-eslint"],
+  "rules": {}
+}
 
 ```
 
-コマンドを入力すると build されてデプロイされます。
-表示された URL を確認すると、作成した URL が表記されてるかと思います。
+react を利用する際に error が生じるため、以下の設定を追加します。
 
-## 4. nextjs を CircleCI を使って Auto Deploy する
-
-```
-これ書いてから築いたのですが、PRなどの作成タイミングでauto deployがはしります。www
-circleCIをdeployのみにしている場合は必要ありません。
-```
-
-circleCI での now の設定は３段階。
-1.now の token を発行して、circleCI の env に記載。最後に、circleCI の config から参照して deploy する形となります。
-
-### 4-1. now token を発行する
-
-nowのtokenが作られるタイミングは、loginの際に発行するものと、自分で作成するものがあります。
-自分でtokenをの発行する方法は、ダッシュボード画面にいき Settings から token を発行することができます。
-
-[dashboard](https://zeit.co/)にいき右上のユーザーアイコンから、Settings リンクをクリック。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-dashboard-setting.png?raw=true">
-
-setting画面にあるTokenリンクから、とtokenの設定画面に遷移します。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-setting-token.png?raw=true">
-
-現状tokenを利用している一覧表示のCreateをクリック
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-create-token.png?raw=true">
-
-tokenを利用する名前を設定し、create tokenをクリックするとtokenが表示されます。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-create-token-form.png">
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeito-token.png">
-
-## 4-2. CircleCIに Environmentを設定する
-
-nowのtokenの発行がおわったら、CircleCIのEnvironmentに記載していきます。
-(Projectがある前提で話をしていきます。)
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-project-page.png">
-
-設定画面にいったらEnvironment VariablesからAdd Variablesを選択
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-setting-environement.png">
-
-先ほどCopyしたnow Tokenを入力して、Environmentの設定をします。
-
-<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-setting-variable-modal.png">
-
-これで、.circleci/config.ymlで $NOW_TOKENで登録したtokenを利用できるようになりました。
-最後にCIの設定をしていきます。
-
-## 4-3. CircleCIの設定
-
-設定が完了したら、circleciでデプロイできるよに、.circleci/config.ymlの編集をしていきます。
-
-```.circleci/config.yml
-version: 2.1
-executors:
-  node:
-    working_directory: ~/project
-    docker:
-      - image: circleci/node:10.12-browsers
-jobs:
-  build:
-    executor:
-      name: node
-    steps:
-      - checkout
-      - run:
-          name: update-npm
-          command: "sudo npm install -g npm@latest"
-      - restore_cache:
-          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}
-      - run:
-          name: npm install on ci
-          command: npm ci
-      - save_cache:
-          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          paths:
-            - ./node_modules
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
-      - run:
-          name: build flat
-          command: npm run build
-# ここから追記
-  deploy-now:
-    executor:
-      name: node
-    steps:
-      - checkout
-      - run:
-          name: update-npm
-          command: "sudo npm install -g npm@latest"
-      - run:
-          name: install now on global
-          command: "sudo npm install -g now"
-      - attach_workspace:
-          at: .
-      - run:
-          name: deploy to now
-          command: now deploy --token $NOW_TOKEN
-# ここまで追記
-workflows:
-  version: 2
-  build-and-cache:
-    jobs:
-      - build
-      - deploy-now:
-          requires:
-            - build
+```.eslintrc.json
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": ["plugin:react/recommended", "standard"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "@typescript-eslint"],
+  "rules": {},
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
 
 ```
 
-でdeplpyすると、CircleCI経由でdeployすることが可能になります。
-nowでauto deployもできるのでこの内容だけだと必要性を感じません。。。
-now 自体も色々あるのであとで記載していこうかと。
+lint がコマンドから叩けるように package.json を編集します。
+
+```package.json
+...
+"scripts": {
+  "dev": "next",
+  "build": "next build",
+  "start": "next start",
+  "lint": "eslint src/** --ext .ts,.tsx",
+  "lint:fix": "npm lint --fix"
+},
+...
+```
+
+次に prettier の rule を lint の rule にも追加するように設定します。
+
+```terminal
+$ npm install -D eslint-plugin-prettier
+```
+
+```.eslintrc.json
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": ["plugin:react/recommended", "standard"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
+
+```
+
+次にコマンドが正常に動くか確認します。
+
+```terminal
+$ npm run lint
+```
+
+成功したら husky の設定をしていきます。
+
+## 2. husky を追加して precommit/prepush の前に lint と formatter を走らす
+
+[husky](https://github.com/typicode/husky)は、git のアクションにフックして、コマンドを走らせることができます。
+
+husky を install して設定していきます。
+
+```terminal
+$ npm install husky --save-dev
+$ touch .huskyrc
+```
+
+今回はコミットの前にフォーマットを走らせ、push の前に lint を走らせるよに変更します。
+
+```package.json
+"husky": {
+  "hooks": {
+    "pre-commit": "pretty-quick --staged",
+    "pre-push": "npm run lint"
+  }
+}
+```
