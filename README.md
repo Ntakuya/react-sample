@@ -88,3 +88,66 @@ token の発行方法は、ダッシュボード画面にいき Settings から 
 [dashboard](https://zeit.co/)にいき右上のユーザーアイコンから、Settings リンクをクリック。
 
 <img>
+
+設定が完了したら、circleciでデプロイできるよに、.circleci/config.ymlの編集をしていきます。
+
+```.circleci/config.yml
+version: 2.1
+executors:
+  node:
+    working_directory: ~/project
+    docker:
+      - image: circleci/node:10.12-browsers
+jobs:
+  build:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: "sudo npm install -g npm@latest"
+      - restore_cache:
+          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}
+      - run:
+          name: npm install on ci
+          command: npm ci
+      - save_cache:
+          key: node-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - run:
+          name: build flat
+          command: npm run build
+# ここから追記
+  deploy-now:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: "sudo npm install -g npm@latest"
+      - run:
+          name: install now on global
+          command: "sudo npm install -g now"
+      - attach_workspace:
+          at: .
+      - run:
+          name: deploy to now
+          command: now deploy --token $NOW_TOKEN
+# ここまで追記
+workflows:
+  version: 2
+  build-and-cache:
+    jobs:
+      - build
+      - deploy-now:
+          requires:
+            - build
+
+```
