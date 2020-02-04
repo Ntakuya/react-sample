@@ -58,14 +58,27 @@ $ pwd
 /your/project/directory
 ```
 
-現状のディレクトリにいることを確認して、
+現状のディレクトリにいることを確認します。
+nowでconfigで扱う、now.jsonファイルを作成していきます。
+
+```now.json
+{
+  "name": "next-sample"
+}
+```
+
+これで、プロジェクト名を固定してdeployすることができます。
+
+```
+ちなみにプロジェクト名を指定しない場合は、root directoryの名前が優先されるっぽいです。
+```
 
 ```terminal
-$ now deploy --prod
+$ now --prod
 
 Deploying ~/your/project/directory under YOUR_PC
 > Using project PROJECT_NAME
-> NOTE: To deploy to production (react-sample.now.sh), run `now --prod`
+> NOTE: To deploy to production (YOUR_PRJECT_NAME.now.sh), run `now --prod`
 > Synced 1 file [4s]
 > https://XXX.now.sh [4s]
 > Ready! Deployed to https:/XXX.now.sh [in clipboard] [24s]
@@ -77,17 +90,56 @@ Deploying ~/your/project/directory under YOUR_PC
 
 ## 4. nextjs を CircleCI を使って Auto Deploy する
 
+```
+これ書いてから築いたのですが、PRなどの作成タイミングでauto deployがはしります。www
+circleCIをdeployのみにしている場合は必要ありません。
+```
+
 circleCI での now の設定は３段階。
 1.now の token を発行して、circleCI の env に記載。最後に、circleCI の config から参照して deploy する形となります。
 
 ### 4-1. now token を発行する
 
-now の token は login タイミングで発行するものと、自分で作成するものがあります。
-token の発行方法は、ダッシュボード画面にいき Settings から token を発行することができます。
+nowのtokenが作られるタイミングは、loginの際に発行するものと、自分で作成するものがあります。
+自分でtokenをの発行する方法は、ダッシュボード画面にいき Settings から token を発行することができます。
 
 [dashboard](https://zeit.co/)にいき右上のユーザーアイコンから、Settings リンクをクリック。
 
-<img>
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-dashboard-setting.png?raw=true">
+
+setting画面にあるTokenリンクから、とtokenの設定画面に遷移します。
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-setting-token.png?raw=true">
+
+現状tokenを利用している一覧表示のCreateをクリック
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-create-token.png?raw=true">
+
+tokenを利用する名前を設定し、create tokenをクリックするとtokenが表示されます。
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeit-create-token-form.png">
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-zeito-token.png">
+
+## 4-2. CircleCIに Environmentを設定する
+
+nowのtokenの発行がおわったら、CircleCIのEnvironmentに記載していきます。
+(Projectがある前提で話をしていきます。)
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-project-page.png">
+
+設定画面にいったらEnvironment VariablesからAdd Variablesを選択
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-setting-environement.png">
+
+先ほどCopyしたnow Tokenを入力して、Environmentの設定をします。
+
+<img src="https://github.com/Ntakuya/react-sample/blob/contents/deploy/public/img/c2-circleci-setting-variable-modal.png">
+
+これで、.circleci/config.ymlで $NOW_TOKENで登録したtokenを利用できるようになりました。
+最後にCIの設定をしていきます。
+
+## 4-3. CircleCIの設定
 
 設定が完了したら、circleciでデプロイできるよに、.circleci/config.ymlの編集をしていきます。
 
@@ -151,3 +203,7 @@ workflows:
             - build
 
 ```
+
+でdeplpyすると、CircleCI経由でdeployすることが可能になります。
+nowでauto deployもできるのでこの内容だけだと必要性を感じません。。。
+now 自体も色々あるのであとで記載していこうかと。
