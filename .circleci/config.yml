@@ -29,8 +29,27 @@ jobs:
       - run:
           name: build flat
           command: npm run build
+  deploy-now:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: "sudo npm install -g npm@latest"
+      - run:
+          name: install now on global
+          command: "sudo npm install -g now"
+      - attach_workspace:
+          at: .
+      - run:
+          name: deploy to now
+          command: now deploy --token $NOW_TOKEN
 workflows:
   version: 2
   build-and-cache:
     jobs:
       - build
+      - deploy-now:
+          requires:
+            - build
