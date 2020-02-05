@@ -229,3 +229,48 @@ $ touch .huskyrc
 ```
 
 ## 3. CircleCI の build をする前に lint test を走らす
+
+circleci に設定を追加してきます。
+deploy する前に test をはしらせて、失敗したら deploy しないように設定していきます。
+
+テストの内容を追加していきます。
+
+```.circleci/config.yml
+version: 2.1
+executors:
+  node:
+    working_directory: ~/project
+    docker:
+      - image: circleci/node:10.12-browsers
+## ここから追記
+jobs:
+  test-lint:
+    executor:
+      name: node
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: linting code
+          command: npm run lint
+## ここまで追記
+```
+
+job の作成が完了したら、workflow に追加します。
+
+```.circleci/config.yml
+workflows:
+  version: 2
+  build-and-cache:
+    jobs:
+      - build
+      - test-lint:
+          requires:
+            - build
+      - deploy-now:
+          requires:
+            - test-lint
+```
+
+requires で build 後に lint が走るように設定し、deploy については lint を通した後に実装するように変更しました。
